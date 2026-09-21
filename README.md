@@ -19,4 +19,4 @@ The app takes patient inputs (clinical and lifestyle factors) and returns a canc
 - `requirements.txt` — dependencies
 
 ## Live Demo
-[Add your Streamlit Cloud link here once deployed]
+[https://arif-cancer-risk-prediction.streamlit.app/]
