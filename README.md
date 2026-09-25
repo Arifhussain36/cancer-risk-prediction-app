@@ -1,10 +1,6 @@
 # Cancer Risk Prediction App
 
-An interactive Streamlit web application that predicts cancer risk based on patient clinical and lifestyle data, using and comparing 
-
-**4 trained machine learning models**.
-
-Built as part of the NAVTTC × NeXskill – Be Productive Data Analytics program, under instructor Sir Atif Siddiqui.
+An interactive Streamlit web application that predicts cancer risk based on patient clinical and lifestyle data, using and comparing **4 trained machine learning models**.
 
 ## How It Works
 
