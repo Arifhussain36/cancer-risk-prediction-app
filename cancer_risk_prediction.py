@@ -29,6 +29,19 @@ st.markdown("""
 
     html, body, [class*="css"] { font-family: 'Poppins', sans-serif; }
 
+    /* Force the main content area to a consistent light background, but leave the
+       header/toolbar (top-right menu, Deploy button) untouched so its icons stay visible */
+    [data-testid="stAppViewContainer"] {
+        background-color: #FFFFFF !important;
+    }
+
+    /* Streamlit's own menus/popovers (the 3-dot settings menu, dropdown lists) - force readable */
+    div[data-baseweb="popover"], div[data-baseweb="popover"] *,
+    [role="listbox"], [role="listbox"] * {
+        background-color: #FFFFFF !important;
+        color: #1F2937 !important;
+    }
+
     .hero {
         background: linear-gradient(135deg, #1E3A8A 0%, #6D28D9 100%);
         padding: 40px 30px;
@@ -37,8 +50,8 @@ st.markdown("""
         margin-bottom: 30px;
         box-shadow: 0px 8px 24px rgba(30, 58, 138, 0.25);
     }
-    .hero h1 { color: white; font-size: 2.6rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
-    .hero p { color: #E0E7FF; font-size: 1.05rem; }
+    .hero h1 { color: white !important; font-size: 2.6rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .hero p { color: #E0E7FF !important; font-size: 1.05rem; }
 
     .section-title {
         font-size: 1.4rem;
@@ -50,22 +63,21 @@ st.markdown("""
         padding-left: 12px;
     }
 
-    /* Big model selector cards (via buttons) */
-    div[data-testid="column"] .stButton>button {
-        background: white;
-        color: #1E3A8A;
-        font-weight: 700;
-        border-radius: 16px;
-        padding: 22px 10px;
-        border: 2px solid #E5E7EB;
-        font-size: 1.05rem;
-        width: 100%;
+    /* Big model selector cards (via buttons) - plain white always, no hover color change.
+       Using data-testid (stable across Streamlit versions) instead of the old .stButton class */
+    div[data-testid="column"] [data-testid="stButton"] button,
+    div[data-testid="column"] [data-testid="stButton"] button:hover,
+    div[data-testid="column"] [data-testid="stButton"] button:focus,
+    div[data-testid="column"] [data-testid="stButton"] button p {
+        background-color: #FFFFFF !important;
+        color: #1E3A8A !important;
+        font-weight: 700 !important;
+        border-radius: 16px !important;
+        padding: 22px 10px !important;
+        border: 2px solid #E5E7EB !important;
+        font-size: 1.05rem !important;
+        width: 100% !important;
         box-shadow: 0px 3px 10px rgba(0,0,0,0.06);
-        transition: all 0.15s ease;
-    }
-    div[data-testid="column"] .stButton>button:hover {
-        border: 2px solid #6D28D9;
-        color: #6D28D9;
     }
 
     .result-box-high {
@@ -81,21 +93,36 @@ st.markdown("""
         border-radius: 16px;
     }
     .result-box-high h2, .result-box-low h2 { font-weight: 800; font-size: 1.6rem; margin-bottom: 6px; }
-    .result-box-high h2 { color: #991B1B; }
-    .result-box-low h2 { color: #166534; }
+    .result-box-high h2 { color: #991B1B !important; }
+    .result-box-low h2 { color: #166534 !important; }
+    .result-box-high p, .result-box-low p { color: #1F2937 !important; }
 
-    .stSidebar .stButton>button {
-        background: linear-gradient(135deg, #6D28D9, #1E3A8A);
-        color: white;
-        font-weight: 700;
-        border-radius: 10px;
-        padding: 12px 0px;
-        border: none;
-        font-size: 1rem;
-        width: 100%;
+    /* Sidebar: force readable colors in both light and dark mode */
+    [data-testid="stSidebar"] {
+        background-color: #F5F3FF !important;
     }
-
-    [data-testid="stSidebar"] { background-color: #F5F3FF; }
+    [data-testid="stSidebar"] * {
+        color: #1F2937 !important;
+    }
+    /* Force light background on actual input widgets so dark text stays visible in dark mode */
+    [data-testid="stSidebar"] div[data-baseweb="select"] > div,
+    [data-testid="stSidebar"] input,
+    [data-testid="stSidebar"] textarea,
+    [data-testid="stSidebar"] [data-baseweb="base-input"] {
+        background-color: #FFFFFF !important;
+        color: #1F2937 !important;
+    }
+    /* Predict button - full width, bold, purple gradient, white text, normal height */
+    [data-testid="stSidebar"] [data-testid="stButton"] button,
+    [data-testid="stSidebar"] [data-testid="stButton"] button p {
+        color: white !important;
+        width: 100% !important;
+        background: linear-gradient(135deg, #6D28D9, #1E3A8A) !important;
+        border: none !important;
+        font-size: 1.05rem !important;
+        padding: 10px 0px !important;
+        margin-top: 10px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -139,11 +166,25 @@ model_icons = {"Logistic Regression": "📈", "Decision Tree": "🌳", "KNN": "�
 cols = st.columns(4)
 for i, (name, m) in enumerate(metrics.items()):
     with cols[i]:
-        label = f"{model_icons.get(name,'')}  {name}\n{m['accuracy']*100:.2f}% Accuracy"
+        label = f"{model_icons.get(name,'')}  {name}"
         if st.button(label, key=f"btn_{name}"):
             st.session_state.selected_model = name
 
 selected_model_name = st.session_state.selected_model
+
+# Dynamically highlight the selected model's card with a grey/purple shade
+selected_index = list(models.keys()).index(selected_model_name) + 1  # nth-of-type is 1-based
+st.markdown(f"""
+    <style>
+    div[data-testid="column"]:nth-of-type({selected_index}) [data-testid="stButton"] button,
+    div[data-testid="column"]:nth-of-type({selected_index}) [data-testid="stButton"] button p {{
+        background-color: #E5E7EB !important;
+        border: 2px solid #6D28D9 !important;
+        color: #6D28D9 !important;
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
 st.success(f"✅ Currently selected: **{selected_model_name}**")
 
 # ---------------------------------------------------------
@@ -174,6 +215,8 @@ for i, (label, value, color) in enumerate(gauge_data):
             showlegend=False,
             margin=dict(t=0, b=0, l=0, r=0),
             height=160,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             annotations=[dict(text=f"{value:.1f}%", x=0.5, y=0.55, font_size=18,
                                font_family="Poppins", font_color=color, showarrow=False),
                          dict(text=label, x=0.5, y=0.30, font_size=12,
@@ -203,7 +246,7 @@ lung_disease = st.sidebar.checkbox("Chronic Lung Disease")
 tumor_history = st.sidebar.checkbox("Previous Tumor History")
 family_history = st.sidebar.checkbox("Family History of Cancer")
 
-predict_btn = st.sidebar.button("🔍 Predict Cancer Risk")
+predict_btn = st.sidebar.button("🔍 Predict Cancer Risk", use_container_width=True)
 
 # ---------------------------------------------------------
 # PREDICTION + DONUT CHART
@@ -271,6 +314,8 @@ if predict_btn:
             showlegend=False,
             margin=dict(t=10, b=10, l=10, r=10),
             height=300,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             annotations=[dict(text=f"{risk_pct:.1f}%", x=0.5, y=0.5,
                                font_size=28, font_family="Poppins", font_color="#1E3A8A",
                                showarrow=False)]
@@ -278,7 +323,7 @@ if predict_btn:
         st.plotly_chart(fig, use_container_width=True)
 
 else:
-    st.info("👈 fill patient details in sidebar and hit **Predict** button.")
+    st.info("👈 Fill in the patient details in the sidebar and click the **Predict** button.")
 
 st.markdown("---")
-st.caption("⚠️ Disclaimer: This tool is only for educational/demo purpose , not substitute for medical advice.")
+st.caption("⚠️ Disclaimer: This tool is for educational/demo purposes only and is not a substitute for medical advice.")
